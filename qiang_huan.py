@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 from pathlib import Path
 import pyautogui
 import utils
@@ -8,10 +9,6 @@ from utils import resource_path
 # 并且启动时，请先将页面切换到 任意关卡的精英模式页面 或者 任意级别环球救援页面
 # picture中的图片 是 窗口尺寸为542*1008下截的， 可以根据需求进行设置
 
-limit_hours = 19  # 运行多少个小时候后终止
-region = (0, 0, 600, 1040)  # 支持定义，识别程序页面的位置尺寸，（左上角x,左上角y,右下角x,右下角y）
-limit_cishu = 1000000000  # 限制次数，完后后退出
-
 # （路径、点击位置偏移中心点(x,y)、匹配置信度）
 qianghuan_chat_button = (resource_path("picture/main_button/chat.png"), (0, 0), 0.7)  # 取中心
 qianghuan_zhaomu_button = (resource_path("picture/main_button/zhaomu.png"), (0, 0), 0.8)  # 取中心
@@ -20,17 +17,21 @@ qianghuan_huan_button = (resource_path("picture/main_button/chat_huan.png"), (0,
 qianghuan_noperson_state = (resource_path("picture/state_picture/no_person"), None, 0.9)  # 判断 没人、也就是没有入队 的文件夹的图片
 qianghuan_youperson_state = (resource_path("picture/state_picture/join_team"), None, 0.8)  # 判断有人了或开局了的文件夹的图片
 
+qianghuan_STOP = False  # 控制是否退出循环
 
-if __name__ == "__main__":
+
+def main(limit_hours, region, limit_cishu):
+    utils.cishu = 0
     begin_timestamp = time.time()
     state = 3
     qiang_s = 1
-    while True:
+    while not qianghuan_STOP:
         now_timestamp = time.time()
         if now_timestamp-begin_timestamp > 3600*limit_hours or utils.cishu>=limit_cishu:
             break
         elif ((now_timestamp - begin_timestamp) // 1) % 10 == 0:
-            print(now_timestamp, state, utils.cishu)
+            print(datetime.fromtimestamp(now_timestamp).strftime('%Y-%m-%d %H:%M:%S'),
+                  f"状态：{state}", f"完成次数：{utils.cishu}")
 
         screenshot_pil = utils.jietu_with_save(region=region)  # 截图
 
@@ -127,3 +128,10 @@ if __name__ == "__main__":
             time.sleep(10)
 
         time.sleep(0.05)
+
+
+if __name__ == "__main__":
+    limit_hours = 19  # 运行多少个小时候后终止
+    region = (0, 0, 600, 1040)  # 支持定义，识别程序页面的位置尺寸，（左上角x,左上角y,宽度,高度）
+    limit_cishu = 1000000000  # 限制次数，完后后退出
+    main(limit_hours=limit_hours, region=region, limit_cishu=limit_cishu)

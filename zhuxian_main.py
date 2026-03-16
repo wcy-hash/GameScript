@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pyautogui
 import time
 from pathlib import Path
@@ -8,11 +10,6 @@ from utils import resource_path
 # 并且启动时，请先将页面切换到 任意关卡的精英模式页面
 # picture 和 zhuxian_picture 中的图片 是 窗口尺寸为542*1008下截的， 可以根据需求进行设置
 
-limit_hours = 19  # 运行多少个小时候后终止
-region = (0, 0, 600, 1040)  # 支持定义，识别程序页面的位置尺寸，（左上角x,左上角y,右下角x,右下角y）
-limit_cishu = 1000000000  # 限制次数，完后后退出
-maximum_time_one_round = 60*10  # 一局最长能接受的时间
-
 # （路径、点击位置偏移中心点(x,y)、匹配置信度）
 zhuxian_pause_button = (resource_path("zhuxian_picture/main_button/pause_button.png"), (0, 0), 0.7)  # 取中心
 zhuxian_exit_button = (resource_path("zhuxian_picture/main_button/exit_button.png"), (0, 0), 0.9)  # 取中心
@@ -20,16 +17,21 @@ zhuxian_begin_button = (resource_path("zhuxian_picture/main_button/zhuxiang_begi
 zhuxian_joingame_state = (resource_path("zhuxian_picture/state_picture/join_game"), None, 0.8)  # 判断 已经成功开局 的文件夹的图片
 
 
-if __name__ == "__main__":
+zhuxian_STOP = False  # 控制是否退出循环
+
+
+def main(limit_hours, region, limit_cishu, maximum_time_one_round):
+    utils.cishu = 0
     begin_timestamp = time.time()
     state = 0
     stamp_time1 = 0
-    while True:
+    while not zhuxian_STOP:
         now_timestamp = time.time()
         if now_timestamp-begin_timestamp > 3600*limit_hours or utils.cishu>=limit_cishu:
             break
         elif ((now_timestamp - begin_timestamp) // 1) % 10 == 0:
-            print(now_timestamp, state, utils.cishu)
+            print(datetime.fromtimestamp(now_timestamp).strftime('%Y-%m-%d %H:%M:%S'),
+                  f"状态：{state}", f"完成次数：{utils.cishu}")
 
         screenshot_pil = utils.jietu_with_save(region=region)  # 截图
 
@@ -93,14 +95,15 @@ if __name__ == "__main__":
                         pyautogui.click(found_loc[0] + found_loc[2] // 2 + zhuxian_pause_button[1][0],
                                         found_loc[1] + found_loc[3] // 2 + zhuxian_pause_button[1][1],
                                         clicks=1, interval=0, button='left', duration=0)
-                        state = 2
                         time.sleep(2)
+                        screenshot_pil = utils.jietu_with_save(region=region)  # 截图
+                        found_loc_all = utils.find_all_template_on_screen_pyautogui(zhuxian_exit_button[0],
+                                                                                    screenshot_pil,
+                                                                                    confidence=zhuxian_exit_button[2])
+                        if found_loc_all:
+                            state = 2
                     except Exception as e:
                         print(f"点击暂停时发生错误: {e}")
-                try:
-                    assert state == 2
-                except Exception as e:
-                    print(f"超时暂停退出不起作用，更换一下暂停按钮的图片: {e}")
         elif state == 2:
             # --- 暂停时，点击退出 --
             found_loc_all = utils.find_all_template_on_screen_pyautogui(zhuxian_exit_button[0],
@@ -112,9 +115,9 @@ if __name__ == "__main__":
                         pyautogui.click(found_loc[0] + found_loc[2]//2 + zhuxian_exit_button[1][0],
                                         found_loc[1] + found_loc[3]//2 + zhuxian_exit_button[1][1],
                                         clicks=2, interval=0, button='left', duration=0)
+                        break
                 except Exception as e:
                     print(f"点击抢票时发生错误: {e}")
-                utils.cishu += 1
                 state = 0
             try:
                 assert state == 0
@@ -123,4 +126,11 @@ if __name__ == "__main__":
 
         time.sleep(3)
 
+
+if __name__ == "__main__":
+    limit_hours = 19  # 运行多少个小时候后终止
+    region = (0, 0, 600, 1040)  # 支持定义，识别程序页面的位置尺寸，（左上角x,左上角y,宽度,高度）
+    limit_cishu = 1000000000  # 限制次数，完后后退出
+    maximum_time_one_round = 60 * 10  # 一局最长能接受的时间
+    main(limit_hours=limit_hours, region=region, limit_cishu=limit_cishu, maximum_time_one_round=maximum_time_one_round)
 
