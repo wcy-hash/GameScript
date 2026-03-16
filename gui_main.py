@@ -5,10 +5,10 @@ from datetime import datetime
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout,
                              QPushButton, QLabel, QSpinBox, QFormLayout,
                              QLineEdit, QMessageBox, QFrame, QTextEdit, QPlainTextEdit)
-from PyQt5.QtGui import QPixmap, QFont, QTextCursor
+from PyQt5.QtGui import QPixmap, QFont, QTextCursor, QIcon
 from PyQt5.QtCore import Qt, pyqtSignal, QObject, QThread
 
-from utils import jieping_save_filename, jietu_with_save
+from utils import jieping_save_filename, jietu_with_save, resource_path
 import qiang_huan, zhuxian_main
 
 
@@ -62,6 +62,9 @@ class ImageDisplayApp(QWidget):
         super().__init__()
         self.image_path = jieping_save_filename
         self.config_file = "config.ini"
+
+        # 修改logo
+        self.setWindowIcon(QIcon(resource_path('picture/logo.png')))
 
         # 初始化界面
         self.initUI()
@@ -227,7 +230,7 @@ class ImageDisplayApp(QWidget):
         main_h_layout.addLayout(right_widget, stretch=3)  # 日志占 3
 
         self.setLayout(main_h_layout)
-        self.setWindowTitle('脚本控制台 v4.0 - stdout 对接版')
+        self.setWindowTitle('向僵尸开炮自动化脚本')
         self.resize(1400, 750)  # 调宽总窗口以容纳终端
 
     # --- 功能函数 ---
