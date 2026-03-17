@@ -61,10 +61,10 @@ class ImageDisplayApp(QWidget):
     def __init__(self):
         super().__init__()
         self.image_path = jieping_save_filename
-        self.config_file = "config.ini"
+        self.config_file = resource_path('config.ini')
 
         # 修改logo
-        self.setWindowIcon(QIcon(resource_path('picture/logo.png')))
+        self.setWindowIcon(QIcon(resource_path('picture/logo.ico')))
 
         # 初始化界面
         self.initUI()
